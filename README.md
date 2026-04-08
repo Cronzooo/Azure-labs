@@ -36,6 +36,10 @@ Verified all three operations were recorded in the Activity Log — management g
 
 ---
 
+Screenshot----
+Role assignments confirmed on az104-mg1---- Screenshot Lab1.webp
+Log Activity ------ ScreenshotLab2.webp
+
 ## Key Concepts
 
 - **Management groups** sit above subscriptions and allow policies and roles to be assigned once and inherited downward
