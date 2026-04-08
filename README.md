@@ -46,12 +46,6 @@ Verified all three operations were recorded in the Activity Log — management g
 
 ---
 
-## Screenshots
-
-| Description | Screenshot |
-|---|---|
-| Role assignments confirmed on az104-mg1 | ![Role Assignments](screenshots/role-assignments.png) |
-| Activity log showing all operations | ![Activity Log](screenshots/activity-log.png) |
 
 ---
 
