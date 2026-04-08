@@ -1,6 +1,6 @@
 # Azure Labs
 
-Hands-on Azure labs completed as part of AZ-104 (Azure Administrator) preparation. Each lab documents what was built, why, and key concepts demonstrated.
+Hands-on Azure labs exploring cloud infrastructure, identity, and administration. Each lab documents what was built, why, and key concepts demonstrated.
 
 ---
 
@@ -14,7 +14,7 @@ Hands-on Azure labs completed as part of AZ-104 (Azure Administrator) preparatio
 
 ## Skills Covered
 
-`Microsoft Azure` `Azure RBAC` `Management Groups` `Custom Role Definitions` `Least Privilege` `Microsoft Entra ID` `Activity Log` `AZ-104`
+`Microsoft Azure` `Azure RBAC` `Management Groups` `Custom Role Definitions` `Least Privilege` `Microsoft Entra ID` `Activity Log`
 
 ---
 
