@@ -1,5 +1,5 @@
 # Azure-labs
-# Lab 02a – Manage Subscriptions and RBAC
+# Manage Subscriptions and RBAC
 
 ## Overview
 Configured Azure role-based access control (RBAC) using management groups, built-in roles, and a custom role definition to enforce least privilege access across subscriptions.
