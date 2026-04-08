@@ -36,9 +36,12 @@ Verified all three operations were recorded in the Activity Log — management g
 
 ---
 
-Screenshot----
-Role assignments confirmed on az104-mg1---- Screenshot Lab1.webp
-Log Activity ------ ScreenshotLab2.webp
+## Screenshots
+
+| Description | Screenshot |
+|---|---|
+| Role assignments confirmed on az104-mg1 | ![Role Assignments](Screenshot%20Lab1.webp) |
+| Activity log showing all operations | ![Activity Log](ScreenshotLab2.webp) |
 
 ## Key Concepts
 
