@@ -8,7 +8,7 @@ Hands-on Azure labs completed as part of AZ-104 (Azure Administrator) preparatio
 
 | Lab | Topic | Skills |
 |-----|-------|--------|
-| [Lab 1 – Manage Subscriptions and RBAC](Az%20Lab%201) | Role-based access control using management groups and custom roles | RBAC, Management Groups, Least Privilege |
+| [Lab 1 – Manage Subscriptions and RBAC](Az%20Lab%201.md) | Role-based access control using management groups and custom roles | RBAC, Management Groups, Least Privilege |
 
 ---
 
