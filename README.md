@@ -1,4 +1,4 @@
-# Azure-labs
+# Azure-lab 1
 # Manage Subscriptions and RBAC
 
 ## Overview
