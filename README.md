@@ -9,7 +9,7 @@ Hands-on Azure labs exploring cloud infrastructure, identity, and administration
 | Lab | Topic | Skills |
 |-----|-------|--------|
 | [Lab 1 – Manage Subscriptions and RBAC](Az%20Lab%201.md) | Role-based access control using management groups and custom roles | RBAC, Management Groups, Least Privilege |
-| [Lab 4 – Virtual Networking](Lab04_VirtualNetworking.md) | Multi-VNet topology with peering, NSGs, ASGs, and public/private DNS | VNet Peering, NSG, ASG, Azure DNS, Private DNS |
+| [Lab 2 – Virtual Networking](Lab04_VirtualNetworking.md) | Multi-VNet topology with peering, NSGs, ASGs, and public/private DNS | VNet Peering, NSG, ASG, Azure DNS, Private DNS |
 
 ---
 
