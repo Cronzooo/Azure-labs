@@ -1,48 +1,32 @@
-# Lab 03 — Implement Intersite Connectivity
+# Lab 3 - Implement Intersite Connectivity
 
-**Tools:** Azure Portal · PowerShell · Network Watcher | **Region:** East US 2 | **RG:** Lab05Az
+## What This Lab Was About
 
----
+This lab was about connecting two completely separate Azure networks and then controlling exactly how traffic flows between them. I also had to prove the networks could not talk to each other before I connected them, and prove they could after. On top of that I set up a custom route to redirect traffic through a specific path instead of letting it go directly.
 
-## What I Built
+## The Networks I Set Up
 
-Two isolated Azure Virtual Networks simulating separate organizational segments — a core IT environment and a manufacturing environment — then connected them using VNet Peering and demonstrated how to override Azure's default routing with a User Defined Route to steer traffic through a dedicated perimeter. I used Network Watcher to prove isolation before peering and PowerShell via Azure Run Command to validate connectivity after.
+I created two virtual networks that represent two separate parts of a company.
 
----
+**CoreServicesVnet (10.0.0.0/16)** was the main IT network. It had two subnets. One called Core for the main VM and one called Perimeter that I set aside for a future firewall or network appliance.
 
-## Virtual Networks
+**ManufacturingVnet (172.16.0.0/16)** was a separate network for the manufacturing side. It had one subnet with its own Windows Server VM.
 
-I created two VNets with non-overlapping address spaces.
+The two networks were completely isolated from each other to start. That is actually the default in Azure. Nothing can cross between networks unless you set it up yourself.
 
-**CoreServicesVnet (10.0.0.0/16)** represents a central IT hub. I gave it two subnets: the Core subnet (10.0.0.0/24) for the primary workload VM, and a Perimeter subnet (10.0.1.0/24) reserved for a future Network Virtual Appliance — the inspection point in a hub-and-spoke topology.
+## Proving They Could Not Talk
 
-**ManufacturingVnet (172.16.0.0/16)** represents an isolated business unit spoke. It has a single Manufacturing subnet (172.16.0.0/24) with a Windows Server VM.
+Before connecting anything I ran a connectivity test using Azure Network Watcher. I tested whether the VM in the manufacturing network could reach the VM in the core network. Every single probe failed. 316 out of 316. Azure showed the next hop as None, meaning there was no path at all between the two networks.
 
-Choosing non-overlapping ranges isn't just a technical checkbox — in production you'd design your entire IP schema across VNets, regions, and on-premises ranges upfront to avoid re-addressing later.
+I did this first on purpose. If you skip this step you have no way of knowing whether your connection setup actually did anything or if the traffic was already getting through some other way.
 
----
+## Connecting the Networks
 
-## Proving Isolation with Network Watcher
+I connected both networks using VNet Peering. Azure needs two connections set up, one from each side, and both have to show as Synchronized before traffic can flow. Once that was done the networks could communicate with each other over Microsoft's private network without going through the public internet.
 
-Before configuring anything, I used Network Watcher's Connection Troubleshoot to run a baseline test between the two VMs. Every probe failed — 316 of 316 — with no route found between the VNets. The next hop came back as None.
+## Testing That It Worked
 
-This is Azure's default security posture: VNets are fully isolated from each other by design. Nothing crosses between them without explicit configuration. Documenting this failure first is important because it proves the peering is actually doing work — you're not inheriting some default connectivity that exists without you.
-
----
-
-## VNet Peering
-
-I connected both VNets with bidirectional peering. Azure requires two link objects — one in each direction — both must reach Synchronized status before traffic can flow.
-
-Peering routes traffic over Microsoft's private backbone with no public internet exposure, no VPN gateway, and no encryption overhead. It's the lowest-latency path for connecting VNets in the same region.
-
-The architectural constraint worth knowing: peering is non-transitive. If CoreServicesVnet peers with ManufacturingVnet, and ManufacturingVnet also peers with a third VNet, CoreServicesVnet cannot reach that third VNet through the chain. Solving transitive routing requires a hub NVA or Azure Firewall — which is exactly what the UDR in this lab sets up the foundation for.
-
----
-
-## Validating Peering with PowerShell Run Command
-
-After peering was configured, I ran a connectivity test directly inside ManufacturingVM using Azure Run Command — no RDP, no public IP, no Bastion host needed.
+After setting up peering I tested the connection by running a PowerShell command directly inside the manufacturing VM using Azure Run Command. I did not need to remote into the machine or open any ports. Azure ran the script for me right from the portal.
 
 ```powershell
 Test-NetConnection 10.0.0.4 -port 3389
@@ -56,27 +40,20 @@ SourceAddress    : 10.1.0.4
 TcpTestSucceeded : True
 ```
 
-`TcpTestSucceeded: True` confirmed that peering was functioning — traffic crossed from the Manufacturing subnet into CoreServicesVnet over the private backbone.
+It came back as True, which confirmed the peering was working and traffic was crossing between the two networks.
 
----
+## Setting Up a Custom Route
 
-## User Defined Route — Controlling Traffic Flow
+The last part was creating a User Defined Route (UDR). By default Azure decides how traffic gets from one place to another on its own. A UDR lets you override that and say exactly where you want traffic to go.
 
-With peering working, I layered in a UDR to demonstrate how to override Azure's default routing. Azure automatically creates system routes based on address spaces — peering adds more. A UDR lets you override those system routes and redirect traffic where you want it to go.
-
-I created route table `rt-CoreServices` with a single route:
+I created a route table called `rt-CoreServices` with one route that says any traffic headed toward the manufacturing network should first go through the perimeter subnet at IP address `10.0.1.4`. That address is where a firewall or network appliance would sit in a real environment. In this lab the appliance is not actually there yet, but the routing is in place so that when it is added traffic will pass through it automatically for inspection.
 
 | Setting | Value |
 |---|---|
 | Destination | 172.16.0.0/16 (ManufacturingVnet) |
-| Next Hop Type | Virtual Appliance |
-| Next Hop Address | 10.0.1.4 (Perimeter subnet — future NVA) |
+| Next Hop | Virtual Appliance at 10.0.1.4 |
 
-I then associated the route table to the Core subnet. This means any traffic leaving CoreServicesVM destined for ManufacturingVnet gets redirected to 10.0.1.4 — the IP where a firewall or NVA would sit — instead of going directly. The NVA doesn't exist yet in this lab, but this is the exact pattern used in hub-and-spoke architectures to force east-west traffic through a centralized inspection point.
-
-Route tables only take effect when associated to a subnet. The table itself does nothing until it's attached.
-
----
+I attached the route table to the Core subnet to make it active. A route table sitting on its own does nothing until you attach it to a subnet.
 
 ## Architecture
 
@@ -84,39 +61,27 @@ Route tables only take effect when associated to a subnet. The table itself does
 CoreServicesVnet (10.0.0.0/16)            ManufacturingVnet (172.16.0.0/16)
 ├── Core subnet (10.0.0.0/24)              └── Manufacturing subnet (172.16.0.0/24)
 │   CoreServicesVM (10.0.0.4)                  ManufacturingVM (172.16.0.4)
-│   ← rt-CoreServices UDR applied
-│   172.16.0.0/16 → 10.0.1.4 (NVA)
+│   custom route applied here
+│   traffic to 172.16.0.0/16 redirected to 10.0.1.4
 │
 └── Perimeter subnet (10.0.1.0/24)
-    Future NVA at 10.0.1.4
+    future firewall sits here at 10.0.1.4
 
-          ↕ VNet Peering (bidirectional, both links Synchronized)
+        connected via VNet Peering (both sides synchronized)
 ```
-
----
 
 ## Screenshots
 
-| Description | Screenshot |
+| What It Shows | Screenshot |
 |---|---|
-| Network Watcher baseline — connectivity failure before peering | ![Screenshot 1](Screenshot%20Lab3_1.png) |
-| VNet Peering — both links Synchronized | ![Screenshot 2](Screenshot%20Lab3_2.png) |
-| PowerShell Run Command — TcpTestSucceeded: True | ![Screenshot 3](Screenshot%20Lab3_3.png) |
+| Network Watcher test showing no connection before peering | ![Screenshot 1](Screenshot%20Lab3_1.png) |
+| VNet Peering with both links showing Synchronized | ![Screenshot 2](Screenshot%20Lab3_2.png) |
+| PowerShell test confirming connection worked | ![Screenshot 3](Screenshot%20Lab3_3.png) |
 
----
+## What I Learned
 
-## Key Concepts
+Azure networks are isolated by default and nothing connects between them unless you set it up. Peering lets you connect networks over Microsoft's private backbone without needing a VPN. Custom routes let you control exactly where traffic goes instead of letting Azure decide. And Azure Run Command is a useful way to run commands inside a VM without having to open remote desktop or a public IP.
 
-- **VNet isolation is the default** — no connectivity between VNets without explicit configuration
-- **Peering requires non-overlapping address spaces** — plan your IP schema before deployment
-- **Peering is non-transitive** — multi-VNet routing requires NVA or Azure Firewall in the path
-- **UDRs override system routes** — giving you control over where traffic goes next
-- **Next hop: Virtual Appliance** redirects traffic through an NVA for inspection before forwarding
-- **Route tables must be subnet-associated** to take effect
-- **Azure Run Command** lets you execute scripts on VMs without RDP or a public IP
+## Skills
 
----
-
-## Skills Demonstrated
-
-`VNet Peering` `User Defined Routes` `Route Tables` `Network Watcher` `Hub-and-Spoke Architecture` `Network Segmentation` `IP Address Planning` `Azure Run Command` `PowerShell` `Intersite Connectivity`
+`VNet Peering` `User Defined Routes` `Route Tables` `Network Watcher` `Network Segmentation` `Azure Run Command` `PowerShell` `Intersite Connectivity`

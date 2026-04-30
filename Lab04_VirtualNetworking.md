@@ -1,78 +1,58 @@
-# Lab 04 — Virtual Networking in Azure
+# Lab 2 - Virtual Networking in Azure
 
-**Tools:** Azure Portal | **Region:** East US 2 | **RG:** az104-rg4
+## What This Lab Was About
 
----
+This lab was about building a network inside Azure from scratch and making sure it was set up securely. In the real world companies split their cloud environments into separate networks so different teams or systems do not have access to each other by default. I built that same kind of setup here, connected the networks together, locked down the traffic, and set up DNS so machines can find each other by name instead of just IP address.
 
-## What I Built
+## The Networks I Created
 
-A multi-VNet network environment in Azure simulating a segmented enterprise topology. I deployed two Virtual Networks with defined subnet structures, connected them via peering, locked down traffic using NSGs and Application Security Groups, and configured both public and private DNS zones for name resolution.
+I built two separate virtual networks with different IP address ranges. They have to use different ranges because Azure will not let you connect two networks if their addresses overlap. It is like trying to have two streets with the exact same address in the same city.
 
----
+**CoreServicesVnet (10.20.0.0/16)** was the main network. I split it into three sections called subnets. One for a future VPN gateway, one for shared services, and one specifically for databases to keep that data separated from everything else.
 
-## Virtual Networks
+**ManufacturingVnet (10.30.0.0/16)** was a second network representing a separate business unit. It had one subnet for the manufacturing team's systems.
 
-I created two VNets with non-overlapping address spaces — a requirement for peering and a real-world constraint when designing at org scale.
+## Connecting the Networks
 
-**CoreServicesVnet (10.20.0.0/16)** — the hub network representing shared infrastructure. I subdivided it into three subnets: GatewaySubnet (10.20.0.0/27) reserved for future VPN/ExpressRoute gateway deployment, SharedServicesSubnet (10.20.10.0/24) for shared workloads, and DatabaseSubnet (10.20.20.0/24) for data tier isolation.
+I connected both networks using VNet Peering. Once peered, machines in one network can talk to machines in the other over Microsoft's private network, not the public internet. It is fast, private, and does not require any extra hardware or a VPN.
 
-**ManufacturingVnet (10.30.0.0/16)** — a spoke network representing a business unit, with ManufacturingSystemsSubnet (10.30.10.0/24).
+One thing worth knowing is that peering only works between the two networks you connect directly. If Network A is connected to Network B, and Network B is connected to Network C, Network A still cannot reach Network C. Each connection has to be set up explicitly.
 
-Keeping address spaces non-overlapping isn't just a technical requirement — it's a design discipline. In production you'd plan your entire IP schema across VNets, regions, and on-premises ranges before deploying anything to avoid costly re-addressing later.
+## Security Rules
 
----
+I created a Network Security Group called `myNSGSecure` and attached it to the shared services subnet to control what traffic was allowed in and out.
 
-## VNet Peering
+Instead of writing rules based on specific IP addresses I used something called an Application Security Group. I created one called `asg-web` and assigned VMs to it. That way the security rules apply to the group, not individual IPs. If I add more servers later I just add them to the group and the rules automatically apply. No need to update anything else.
 
-I connected both VNets via bidirectional peering, allowing resources in either VNet to communicate over private IPs using Microsoft's backbone — no public internet, no gateways, no encryption overhead.
+For inbound traffic I allowed web traffic on ports 80 and 443 from that group. For outbound I added a rule that blocks all traffic going out to the internet. Azure allows internet access by default so I had to explicitly override that.
 
-The key architectural detail here is that peering is **non-transitive**. If CoreServicesVnet peers with ManufacturingVnet, and ManufacturingVnet peers with a third VNet, CoreServicesVnet cannot reach that third VNet through the chain. Solving transitive routing requires either Azure Firewall/NVA in a hub-and-spoke design or Azure Virtual WAN at scale — a distinction that comes up often in cloud architecture discussions.
+## Public DNS
 
----
+I set up a public DNS zone for `az104contoso.com` and added a record pointing `www` to an internal IP address. DNS is basically the system that translates a web address like `www.example.com` into an actual IP address a computer can connect to. Setting this up in Azure means Azure is handling that translation for the domain.
 
-## Network Security — NSG & ASGs
+## Private DNS
 
-I created NSG `myNSGSecure` and attached it to SharedServicesSubnet. Rather than writing IP-based rules, I used an **Application Security Group** (`asg-web`) to control access by workload role.
-
-**Inbound:** Allowed ports 80/443 from `asg-web` — any VM assigned to that ASG can receive web traffic without touching the NSG rule itself as the environment scales.
-
-**Outbound:** Added `DenyInternetOutbound` to explicitly block all outbound internet traffic from the subnet. Azure's default (priority 65001) allows outbound internet — this rule overrides it at a lower priority number and enforces a zero-trust posture where internet egress must be explicitly approved.
-
-The reason I used an ASG instead of source IPs: if I add five more web servers tomorrow, I assign them to `asg-web` at the NIC level. The security rule doesn't change. This is the scalable pattern for managing security policy in dynamic environments.
-
----
-
-## DNS — Public Zone
-
-I created a Public DNS Zone for `az104contoso.com` and added a `www` A record pointing to `10.20.0.4`. This makes Azure the authoritative nameserver for the domain — in production you'd update your registrar's NS records to delegate to Azure's nameservers to complete the chain.
-
-One operational detail worth noting: the 1-hour TTL (3600s) means resolvers cache the answer for an hour. In a real migration scenario, you'd lower TTL well before the cutover so DNS changes propagate quickly, then raise it back after stabilizing.
-
----
-
-## DNS — Private Zone
-
-I created a Private DNS Zone (`private.az104contoso.com`) and linked it to both CoreServicesVnet and ManufacturingVnet with **auto registration enabled** on both links.
-
-Auto registration means any VM deployed into either VNet automatically gets an A record created in this zone using its hostname — and the record is removed when the VM is deleted. No manual DNS management as the environment changes.
-
-The limit worth knowing: a VNet can only have auto registration enabled for **one** private DNS zone at a time. You can link to multiple zones, but only one gets auto reg.
-
-The bigger picture is what private DNS enables: internal service discovery by name instead of hardcoded IPs. In zero-trust GovCon environments, you'd never expose internal workload names publicly — private DNS keeps all resolution scoped to the VNet boundary.
-
----
+I also set up a private DNS zone called `private.az104contoso.com` and linked it to both networks. With auto registration turned on, any virtual machine that gets created inside either network automatically gets its own DNS record. When the machine is deleted the record goes away too. This means machines can reach each other by name without anyone having to manually update a list.
 
 ## Architecture
 
 ```
 CoreServicesVnet (10.20.0.0/16)          ManufacturingVnet (10.30.0.0/16)
 ├── GatewaySubnet (10.20.0.0/27)          └── ManufacturingSystemsSubnet
-├── SharedServicesSubnet ← myNSGSecure
+├── SharedServicesSubnet (NSG applied)
 └── DatabaseSubnet
-          ↕ VNet Peering (bidirectional)
+          connected via VNet Peering
 
-Public DNS:  az104contoso.com → www A → 10.20.0.4
+Public DNS:  az104contoso.com  www points to  10.20.0.4
 Private DNS: private.az104contoso.com
-             ├── CoreServicesVnetLink (auto reg ON)
-             └── ManufacturingVnetLink (auto reg ON)
+             linked to CoreServicesVnet (auto registration on)
+             linked to ManufacturingVnet (auto registration on)
 ```
+
+## What I Learned
+
+Keeping networks separated is a basic security practice in cloud environments. Peering lets you connect them in a controlled way without putting anything on the public internet. Security groups are much easier to manage than IP-based rules when your environment is growing. Private DNS makes it so machines can find each other by name automatically without anyone having to manage it manually.
+
+## Skills
+
+`Virtual Networks` `VNet Peering` `NSG` `Application Security Groups` `Azure DNS` `Private DNS` `Network Segmentation` `Azure Portal`

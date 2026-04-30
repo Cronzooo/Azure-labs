@@ -1,26 +1,17 @@
-# 
-# Manage Subscriptions and RBAC
+# Lab 1 - Manage Subscriptions and RBAC
 
-## Overview
-Configured Azure role-based access control (RBAC) using management groups, built-in roles, and a custom role definition to enforce least privilege access across subscriptions.
+## What This Lab Was About
 
-## Objective
-Grant a help desk team the ability to manage virtual machines and submit support tickets across all subscriptions — without giving them more access than necessary.
+This lab was about controlling who can do what in Azure. The scenario was a help desk team that needed to manage virtual machines and create support tickets, but nothing beyond that. In Azure this is handled through something called RBAC, which stands for Role-Based Access Control. Think of it like giving someone a key card that only opens certain rooms.
 
----
+## What I Did
 
-## What I Built
+I started by creating a management group called `az104-mg1`. A management group sits above your subscriptions in Azure, kind of like a folder that holds everything. The reason I used one is so I could assign permissions once at the top and have them flow down to all the subscriptions underneath automatically.
 
-### Management Group
-Created a management group (`az104-mg1`) to serve as a single scope for all role assignments, so permissions apply across all subscriptions underneath it without repeating assignments individually.
+From there I assigned the **Virtual Machine Contributor** role to the help desk team at the management group level. That role gives them everything they need to manage VMs without touching anything else in the environment.
 
-### Built-in Role Assignment
-Assigned the **Virtual Machine Contributor** role to the HelpDesk group at the management group level. This allows the team to manage VMs across all subscriptions through inheritance.
+The built-in roles did not fit exactly what I needed so I created a custom one. I based it on the **Support Request Contributor** role but removed one specific permission called `Microsoft.Support/register/action`. That permission lets someone register new Azure resource providers, which is more of an admin task that the help desk should not be doing. Removing it keeps their access limited to just what the job requires.
 
-### Custom Role
-Cloned the built-in **Support Request Contributor** role and removed the `Microsoft.Support/register/action` permission. This prevents the help desk from registering new Azure resource providers — an administrative action outside their responsibilities.
-
-The custom role JSON structure:
 ```json
 {
   "actions": ["Microsoft.Support/*"],
@@ -31,30 +22,19 @@ The custom role JSON structure:
 }
 ```
 
-### Activity Log
-Verified all three operations were recorded in the Activity Log — management group creation, role assignment, and custom role definition — confirming Azure's built-in audit trail was capturing changes in real time.
-
----
+After setting everything up I checked the Activity Log to confirm Azure recorded all three actions. The management group creation, the role assignment, and the custom role definition all showed up. Being able to verify that in a log matters in a real environment because you need a paper trail showing who changed what and when.
 
 ## Screenshots
 
-| Description | Screenshot |
+| What It Shows | Screenshot |
 |---|---|
-| Role assignments confirmed on az104-mg1 | ![Role Assignments](Screenshot%20Lab1.webp) |
-| Activity log showing all operations | ![Activity Log](ScreenshotLab2.webp) |
+| Role assignments on az104-mg1 | ![Role Assignments](Screenshot%20Lab1.webp) |
+| Activity log showing all three operations | ![Activity Log](ScreenshotLab2.webp) |
 
-## Key Concepts
+## What I Learned
 
-- **Management groups** sit above subscriptions and allow policies and roles to be assigned once and inherited downward
-- **RBAC is additive** — users get the combined permissions of all their role assignments
-- **NotActions** subtracts permissions from the allowed set within a role — it is not an explicit deny
-- **Assignable scopes** control where a custom role can be used
-- **Activity Log** retains 90 days of control plane operations by default and can be exported for longer retention
+Management groups let you set permissions one time and have them apply across multiple subscriptions automatically. RBAC in Azure stacks permissions, so a person gets access based on everything their roles allow combined. The `notActions` field lets you remove one specific thing without blocking everything else. The Activity Log records every action taken in Azure so you can always trace back what happened.
 
----
+## Skills
 
-
----
-
-## Skills Demonstrated
 `Azure RBAC` `Management Groups` `Custom Role Definitions` `Least Privilege` `Activity Log` `Microsoft Entra ID`
