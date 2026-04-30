@@ -12,7 +12,7 @@ Two isolated Azure Virtual Networks simulating separate organizational segments 
 
 ## Virtual Networks
 
-I created two VNets with non-overlapping address spaces, which is a hard requirement for peering and a real-world planning discipline.
+I created two VNets with non-overlapping address spaces.
 
 **CoreServicesVnet (10.0.0.0/16)** represents a central IT hub. I gave it two subnets: the Core subnet (10.0.0.0/24) for the primary workload VM, and a Perimeter subnet (10.0.1.0/24) reserved for a future Network Virtual Appliance — the inspection point in a hub-and-spoke topology.
 
