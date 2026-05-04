@@ -1,6 +1,6 @@
 # Azure Labs
 
-Hands-on Azure labs exploring cloud infrastructure, identity, and administration. Each lab documents what was built, why, and key concepts demonstrated.
+Hands-on Azure labs demonstrating cloud engineering and security concepts. Each lab documents what was built, why, and key concepts demonstrated.
 
 ---
 
