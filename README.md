@@ -11,12 +11,13 @@ Hands-on Azure labs demonstrating cloud engineering and security concepts. Each 
 | [Lab 1 – Manage Subscriptions and RBAC](Az%20Lab%201.md) | Role-based access control using management groups and custom roles | RBAC, Management Groups, Least Privilege |
 | [Lab 2 – Virtual Networking](Lab04_VirtualNetworking.md) | Multi-VNet topology with peering, NSGs, ASGs, and public/private DNS | VNet Peering, NSG, ASG, Azure DNS, Private DNS |
 | [Lab 3 – Implement Intersite Connectivity](Lab3/LAB_03.md) | Connect isolated VNets using VNet Peering and control traffic with User Defined Routes | VNet Peering, UDR, Route Tables, Hub-and-Spoke |
+| [Lab 4 – Implement Network Traffic Management](Lab04_NetworkTrafficManagement.md) | Distribute traffic across VMs using Azure Load Balancer and Application Gateway | Load Balancer, Application Gateway, Health Probes, Backend Pools, Layer 4 vs Layer 7 |
 
 ---
 
 ## Skills Covered
 
-`Microsoft Azure` `Azure RBAC` `Management Groups` `Custom Role Definitions` `Least Privilege` `Microsoft Entra ID` `Activity Log` `Virtual Networks` `VNet Peering` `NSG` `Application Security Groups` `Azure DNS` `Private DNS` `User Defined Routes` `Route Tables` `Intersite Connectivity`
+`Microsoft Azure` `Azure RBAC` `Management Groups` `Custom Role Definitions` `Least Privilege` `Microsoft Entra ID` `Activity Log` `Virtual Networks` `VNet Peering` `NSG` `Application Security Groups` `Azure DNS` `Private DNS` `User Defined Routes` `Route Tables` `Intersite Connectivity` `Azure Load Balancer` `Azure Application Gateway` `Health Probes` `Backend Pools` `Layer 4 vs Layer 7` `Traffic Distribution`
 
 ---
 
