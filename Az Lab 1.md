@@ -22,7 +22,7 @@ The built-in roles did not fit exactly what I needed so I created a custom one. 
 }
 ```
 
-After setting everything up I checked the Activity Log to confirm Azure recorded all three actions. The management group creation, the role assignment, and the custom role definition all showed up. Being able to verify that in a log matters in a real environment because you need a paper trail showing who changed what and when.
+After setting everything up I checked the Activity Log to confirm Azure recorded all three actions. The management group creation, the role assignment, and the custom role definition all showed up. Being able to verify that in the Activity Log matters because you always want a record of who changed what and when.
 
 ## Screenshots
 

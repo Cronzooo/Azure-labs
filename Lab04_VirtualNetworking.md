@@ -2,7 +2,7 @@
 
 ## What This Lab Was About
 
-This lab was about building a network inside Azure from scratch and making sure it was set up securely. In the real world companies split their cloud environments into separate networks so different teams or systems do not have access to each other by default. I built that same kind of setup here, connected the networks together, locked down the traffic, and set up DNS so machines can find each other by name instead of just IP address.
+This lab was about building a network inside Azure from scratch and making sure it was set up securely. The idea is to split things into separate networks so different teams or systems cannot reach each other by default. I built that kind of setup here, connected the networks together, locked down the traffic, and set up DNS so machines can find each other by name instead of just IP address.
 
 ## The Networks I Created
 
@@ -51,7 +51,7 @@ Private DNS: private.az104contoso.com
 
 ## What I Learned
 
-Keeping networks separated is a basic security practice in cloud environments. Peering lets you connect them in a controlled way without putting anything on the public internet. Security groups are much easier to manage than IP-based rules when your environment is growing. Private DNS makes it so machines can find each other by name automatically without anyone having to manage it manually.
+Keeping networks separated stops one compromised system from reaching everything else. Peering lets you connect them in a controlled way without going through the public internet. Security groups are much easier to manage than writing rules for individual IP addresses, especially as you add more servers. Private DNS means machines can find each other by name automatically without anyone having to update a list every time something changes.
 
 ## Skills
 

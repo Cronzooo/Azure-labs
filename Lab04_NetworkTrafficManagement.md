@@ -2,45 +2,45 @@
 
 ## What This Lab Was About
 
-This lab was about controlling how traffic flows to virtual machines inside Azure. In a real environment you never send users directly to a single server because if that server goes down everything goes down with it. Instead you put a layer in between that distributes traffic, checks if servers are healthy, and routes requests to the right place. This lab covered two Azure tools that do exactly that: Azure Load Balancer and Azure Application Gateway.
+This lab was about making sure traffic gets spread across multiple servers instead of hitting just one. If only one server handles everything and it crashes, the whole thing goes down. The fix is to put something in front of the servers that splits the traffic and keeps an eye on which servers are still running. This lab covered two Azure tools that do that: Azure Load Balancer and Azure Application Gateway.
 
-Note: The official lab uses three backend VMs. I completed this with two VMs due to free trial resource limits. The core traffic management concepts are identical.
+Note: The official lab uses three VMs. I did it with two because of free trial limits. Everything still works the same way.
 
 ## The Infrastructure I Built
 
-I created a virtual network with separate subnets: one for the load balancer backend, one for the application gateway backend, and one for the application gateway itself. Subnets keep different layers of the architecture isolated from each other, which is standard practice.
+I set up a virtual network and split it into subnets, one section for the load balancer, one for the application gateway, and one for the VMs themselves. Keeping them in separate sections just keeps things organized and clean.
 
-I deployed two virtual machines running web servers as the backend. In production you would have more for higher availability but two is enough to see traffic distribution in action.
+I deployed two virtual machines with web servers on them to act as the backend.
 
 ## Azure Load Balancer
 
-The Load Balancer sits in front of the backend VMs and distributes incoming traffic between them at the network layer (Layer 4). It works at the TCP/UDP level, which means it does not look at the content of requests, just where they are coming from and where they need to go.
+The Load Balancer sits in front of the two VMs and splits incoming traffic between them. It does not look inside the requests, it just knows where traffic is coming from and sends it to the next available server.
 
-I configured a **backend pool** containing both VMs. Any traffic sent to the load balancer's IP gets distributed across the pool.
+I set up a **backend pool** with both VMs in it. All traffic going to the load balancer's IP gets split across that pool.
 
-I set up a **health probe** that checks each VM on a regular interval. If a VM stops responding the load balancer automatically stops sending traffic to it. Once the VM recovers it gets added back. This is how you get fault tolerance without any manual intervention.
+The **health probe** is what makes it smart. It checks each VM on a timer. If one stops responding, the load balancer stops sending it traffic automatically. When it comes back, it starts getting traffic again. No one has to do anything manually.
 
-**Load balancing rules** tied the frontend IP to the backend pool and told the load balancer which port to forward traffic on.
+**Load balancing rules** connect the public IP to the backend pool and tell it which port to use.
 
 ## Azure Application Gateway
 
-The Application Gateway is more advanced. It operates at Layer 7, which means it understands HTTP and HTTPS. Because it can read the content of requests it can make smarter routing decisions than a standard load balancer.
+The Application Gateway does the same job but smarter. It actually reads the request, so it can make decisions based on what the user is asking for.
 
 I configured:
 
-- A **frontend IP** that receives incoming web traffic
-- A **backend pool** pointing to the VMs
-- **HTTP settings** that define how the gateway talks to the backend servers
-- A **listener** that tells the gateway which port and protocol to accept traffic on
-- **Routing rules** that connect listeners to backend pools
+- A **frontend IP** that takes in the web traffic
+- A **backend pool** with the VMs
+- **HTTP settings** for how it talks to the backend
+- A **listener** that watches for incoming requests
+- **Routing rules** that connect the listener to the backend pool
 
-The Application Gateway also has built-in WAF (Web Application Firewall) capability, though I did not enable it in this lab. In a real environment you would turn it on to protect against common attacks.
+It also comes with a built-in firewall called WAF that can block common attacks. I did not turn it on for this lab but it is there.
 
 ## How Traffic Distribution Works
 
-With the Load Balancer, requests get distributed in round-robin by default. Request 1 goes to VM1, request 2 goes to VM2, request 3 goes back to VM1, and so on. You can configure session persistence if you need a user to always hit the same server.
+With the Load Balancer, traffic goes back and forth between servers. First request goes to VM1, second goes to VM2, third goes back to VM1, and so on.
 
-With the Application Gateway, you can go beyond round-robin. You can route based on URL paths, host headers, or other HTTP attributes. For example, requests to `/api` could go to one backend pool and requests to `/images` could go to another.
+With the Application Gateway you can get more specific. You can send requests to `/videos` to one set of servers and `/images` to a completely different set, all based on the URL path.
 
 ## Architecture
 
@@ -64,7 +64,7 @@ Azure Application Gateway (Layer 7 - HTTP/HTTPS)
 
 ## What I Learned
 
-A Load Balancer is fast and lightweight but it has no awareness of what is inside a request. An Application Gateway is more powerful because it understands HTTP and can route based on content. In practice you would choose between them based on what kind of routing logic you need. Health probes are what make both tools self-healing, the system detects a failed server and reroutes traffic without anyone having to do it manually.
+The Load Balancer is simple and fast but it cannot look inside requests. The Application Gateway costs more but lets you route based on what the request actually contains. Health probes are what make both tools reliable because they automatically stop sending traffic to a broken server without anyone needing to step in.
 
 ## Screenshots
 

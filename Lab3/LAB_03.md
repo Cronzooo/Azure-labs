@@ -46,7 +46,7 @@ It came back as True, which confirmed the peering was working and traffic was cr
 
 The last part was creating a User Defined Route (UDR). By default Azure decides how traffic gets from one place to another on its own. A UDR lets you override that and say exactly where you want traffic to go.
 
-I created a route table called `rt-CoreServices` with one route that says any traffic headed toward the manufacturing network should first go through the perimeter subnet at IP address `10.0.1.4`. That address is where a firewall or network appliance would sit in a real environment. In this lab the appliance is not actually there yet, but the routing is in place so that when it is added traffic will pass through it automatically for inspection.
+I created a route table called `rt-CoreServices` with one route that says any traffic headed toward the manufacturing network should first go through the perimeter subnet at IP address `10.0.1.4`. That address is where a firewall or network appliance would eventually sit. The appliance is not actually there yet, but the routing is in place so that when it is added traffic will pass through it automatically for inspection.
 
 | Setting | Value |
 |---|---|
