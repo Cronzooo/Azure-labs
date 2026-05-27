@@ -66,6 +66,16 @@ Azure Application Gateway (Layer 7 - HTTP/HTTPS)
 
 A Load Balancer is fast and lightweight but it has no awareness of what is inside a request. An Application Gateway is more powerful because it understands HTTP and can route based on content. In practice you would choose between them based on what kind of routing logic you need. Health probes are what make both tools self-healing, the system detects a failed server and reroutes traffic without anyone having to do it manually.
 
+## Screenshots
+
+| What It Shows | Screenshot |
+|---------------|------------|
+| Load Balancer frontend IP responding and routing traffic to az104-06-vm1 | ![Screenshot 1](Screenshot_Lab4_1.png) |
+| Application Gateway path-based routing test — `/image` path hit the backend | ![Screenshot 2](Screenshot_Lab4_2.png) |
+| Application Gateway path-based routing test — `/video` path hit the backend | ![Screenshot 3](Screenshot_Lab4_3.png) |
+| Resource group showing all lab resources (VMs, App Gateway, Load Balancer) | ![Screenshot 4](Screenshot_Lab4_4.png) |
+| Application Gateway backend health — all backends showing Healthy | ![Screenshot 5](Screenshot_Lab4_5.png) |
+
 ## Skills
 
 `Azure Load Balancer` `Azure Application Gateway` `Backend Pools` `Health Probes` `Load Balancing Rules` `Layer 4 vs Layer 7` `Traffic Distribution` `Virtual Networks` `Azure Portal`
